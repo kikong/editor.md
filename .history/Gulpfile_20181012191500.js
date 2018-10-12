@@ -6,7 +6,7 @@ var babel        = require("gulp-babel");
 var gutil        = require("gulp-util");
 var sass         = require("gulp-ruby-sass");
 var jshint       = require("gulp-jshint");
-var uglify       = require("gulp-uglify");
+var uglify       = require("gulp-uglifyjs");
 var rename       = require("gulp-rename");
 var concat       = require("gulp-concat");
 var notify       = require("gulp-notify");
@@ -21,7 +21,6 @@ var replace      = require("gulp-replace");
 pkg.name         = "Editor.md";
 pkg.today        = dateFormat;
 
-var editormdDist = './dist';
 var headerComment = ["/*",
 					" * <%= pkg.name %>",
                     " *",
@@ -76,26 +75,26 @@ gulp.task("scss3", function() {
 
 gulp.task("js", function() {
   return gulp.src("./src/editormd.js")
-            // .pipe(jshint("./.jshintrc"))
-            // .pipe(jshint.reporter("default"))
+            .pipe(jshint("./.jshintrc"))
+            .pipe(jshint.reporter("default"))
             .pipe(header(headerComment, {pkg : pkg, fileName : function(file) {
                 var name = file.path.split(file.base);
                 return name[1].replace(/[\\\/]?/, "");
             }}))
-            .pipe(gulp.dest(editormdDist))
+            .pipe(gulp.dest("./"))
             .pipe(rename({ suffix: ".min" }))
             .pipe(babel({
                 presets: ['@babel/env']
             }))
             .pipe(uglify())  // {outSourceMap: true, sourceRoot: './'}
             .on('error', gutil.log)
-            .pipe(gulp.dest(editormdDist))
+            .pipe(gulp.dest("./"))
             .pipe(header(headerMiniComment, {pkg : pkg, fileName : function(file) {
                 var name = file.path.split(file.base + ( (os.platform() === "win32") ? "\\" : "/") );
                 return name[1].replace(/[\\\/]?/, "");
             }}))
-            .pipe(gulp.dest(editormdDist))
-            .pipe(notify({ message: editormdDist +"/editormd.min.js task complete" }));
+            .pipe(gulp.dest("./"))
+            .pipe(notify({ message: "editormd.js task complete" }));
 });
 
 gulp.task("amd", function() {
@@ -179,29 +178,29 @@ gulp.task("amd", function() {
 
     gulp.src("src/editormd.js")
         .pipe(rename({ suffix: ".amd" }))
-        .pipe(gulp.dest(editormdDist))
+        .pipe(gulp.dest('./'))
         .pipe(header(headerComment, {pkg : pkg, fileName : function(file) {
             var name = file.path.split(file.base);
             return name[1].replace(/[\\\/]?/, "");
         }}))
-        .pipe(gulp.dest(editormdDist))
+        .pipe(gulp.dest("./"))
         .pipe(replace("/* Require.js define replace */", replaceText1))
-        .pipe(gulp.dest(editormdDist))
+        .pipe(gulp.dest('./'))
         .pipe(replace("/* Require.js assignment replace */", replaceText2))
-        .pipe(gulp.dest(editormdDist))
+        .pipe(gulp.dest('./'))
         .pipe(rename({ suffix: ".min" }))
         .pipe(babel({
             presets: ['@babel/env']
         }))
         .on('error', gutil.log)
         .pipe(uglify()) //{outSourceMap: true, sourceRoot: './'}
-        .pipe(gulp.dest(editormdDist))
+        .pipe(gulp.dest("./"))
         .pipe(header(headerMiniComment, {pkg : pkg, fileName : function(file) {
             var name = file.path.split(file.base + ( (os.platform() === "win32") ? "\\" : "/") );
             return name[1].replace(/[\\\/]?/, "");
         }}))
-        .pipe(gulp.dest(editormdDist))
-        .pipe(notify({ message: editormdDist+" amd version task complete"}));
+        .pipe(gulp.dest("./"))
+        .pipe(notify({ message: "amd version task complete"}));
 });
 
 
@@ -211,7 +210,7 @@ var codeMirror = {
             mode : "lib/codemirror/mode",
             addon : "lib/codemirror/addon"
         },
-        dist : editormdDist+"/lib/codemirror"
+        dist : "lib/codemirror"
     },
     modes : [
         "css",
@@ -346,7 +345,7 @@ gulp.task("default", function() {
     gulp.run("scss2");
     gulp.run("scss3");
     gulp.run("js");
-    // gulp.run("amd");
+    gulp.run("amd");
     gulp.run("cm-addon");
     gulp.run("cm-mode");
 });
